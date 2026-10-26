@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Portfolio Builder — Create & Export Your Website</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Curated Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300..800;1,300..800&family=Inter:wght@300..800&family=Outfit:wght@300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Space+Grotesk:wght@300..700&family=Syne:wght@400..800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Custom scrollbar styling for the editor panel */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    .dark ::-webkit-scrollbar-thumb { background: #475569; }
+
+    /* Transitions & Smooth rendering */
+    * { box-sizing: border-box; }
+    .smooth-transition { transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+
+    /* Custom preview frame transitions */
+    #previewWrapper {
+      transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans antialiased h-screen flex flex-col overflow-hidden select-none">
+
+  <!-- ================= TOP APP BAR ================= -->
+  <header class="h-16 border-b border-slate-800 bg-slate-950 px-4 flex items-center justify-between shrink-0 z-30">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-violet-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+        <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+      </div>
+      <div>
+        <h1 class="text-sm font-bold tracking-tight text-white flex items-center gap-2">
+          Portfolio Builder
+          <span class="text-[10px] font-semibold uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded-full">For Media & Design</span>
+        </h1>
+        <p class="text-xs text-slate-400 hidden sm:block">No coding needed • Zero sign-up • Standalone Export</p>
+      </div>
+    </div>
+
+    <!-- Center: Viewport preview switcher -->
+    <div class="hidden md:flex items-center bg-slate-900 border border-slate-800 p-1 rounded-xl text-xs gap-1">
+      <button onclick="setViewport('desktop')" id="vpDesktop" class="px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-white bg-slate-800 font-medium transition shadow-sm" title="Desktop View (100%)">
+        <i data-lucide="monitor" class="w-3.5 h-3.5"></i>
+        <span>Desktop</span>
+      </button>
+      <button onclick="setViewport('tablet')" id="vpTablet" class="px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-slate-400 hover:text-white transition" title="Tablet View (768px)">
+        <i data-lucide="tablet" class="w-3.5 h-3.5"></i>
+        <span>Tablet</span>
+      </button>
+      <button onclick="setViewport('mobile')" id="vpMobile" class="px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-slate-400 hover:text-white transition" title="Mobile View (390px)">
+        <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+        <span>Mobile</span>
+      </button>
+    </div>
+
+    <!-- Right: Actions -->
+    <div class="flex items-center gap-2">
+      <div id="saveBadge" class="hidden sm:flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+        <i data-lucide="check" class="w-3 h-3"></i>
+        <span>Auto-saved</span>
+      </div>
+
+      <button onclick="confirmReset()" class="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition" title="Reset to Sample Template">
+        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+      </button>
+
+      <button onclick="downloadWebsite()" class="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white font-medium text-xs sm:text-sm px-4 py-2 rounded-xl shadow-lg shadow-indigo-500/25 transition active:scale-95">
+        <i data-lucide="download" class="w-4 h-4"></i>
+        <span>Download My Website</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= MAIN APP WORKSPACE ================= -->
+  <main class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+
+    <!-- Mobile view toggle tabs -->
+    <div class="flex md:hidden bg-slate-900 border-b border-slate-800 text-xs font-medium">
+      <button id="mobileTabEditor" onclick="switchMobileTab('editor')" class="flex-1 py-2.5 text-center text-indigo-400 border-b-2 border-indigo-500 flex items-center justify-center gap-1.5">
+        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Content & Design
+      </button>
+      <button id="mobileTabPreview" onclick="switchMobileTab('preview')" class="flex-1 py-2.5 text-center text-slate-400 flex items-center justify-center gap-1.5">
+        <i data-lucide="eye" class="w-3.5 h-3.5"></i> Live Preview
+      </button>
+    </div>
+
+    <!-- LEFT PANEL: Visual Editor -->
+    <aside id="editorPanel" class="w-full md:w-[480px] lg:w-[520px] bg-slate-950 border-r border-slate-800 flex flex-col h-full overflow-hidden shrink-0 z-20">
+      
+      <!-- Editor Tabs: Content vs Design -->
+      <div class="p-3 border-b border-slate-800 flex gap-2 bg-slate-950/80 backdrop-blur sticky top-0 z-10">
+        <button onclick="setEditorTab('content')" id="tabBtnContent" class="flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-sm transition">
+          <i data-lucide="user" class="w-3.5 h-3.5"></i> Content & Media
+        </button>
+        <button onclick="setEditorTab('design')" id="tabBtnDesign" class="flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 bg-slate-900 text-slate-400 hover:text-white transition">
+          <i data-lucide="palette" class="w-3.5 h-3.5"></i> Style & Theme
+        </button>
+        <button onclick="setEditorTab('sections')" id="tabBtnSections" class="flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 bg-slate-900 text-slate-400 hover:text-white transition">
+          <i data-lucide="layers" class="w-3.5 h-3.5"></i> Layout Order
+        </button>
+      </div>
+
+      <!-- Scrollable Form Body -->
+      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5 text-sm select-text">
+
+        <!-- ================= CONTENT TAB ================= -->
+        <div id="contentTabSection" class="space-y-6">
+
+          <!-- 1. Profile / Personal Info -->
+          <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 sm:p-5">
+            <h2 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+              <i data-lucide="user-check" class="w-4 h-4 text-indigo-400"></i>
+              Personal Information
+            </h2>
+            <p class="text-xs text-slate-400 mb-4">Your headline details to introduce yourself to directors & recruiters.</p>
+
+            <div class="space-y-3.5">
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Artist / Student Name</label>
+                <input type="text" id="inpName" oninput="updateData('name', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. Maya Chen">
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Course & College / Studio</label>
+                <input type="text" id="inpCourse" oninput="updateData('course', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. 2nd Year Animation & VFX • Royal College of Art">
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Short Bio (2–3 lines)</label>
+                <textarea id="inpBio" rows="3" oninput="updateData('bio', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none leading-relaxed" placeholder="Tell visitors about your style, artistic vision, and what drives your work."></textarea>
+              </div>
+
+              <!-- Profile Photo Upload -->
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1.5">Profile Photo</label>
+                <div class="flex items-center gap-4">
+                  <div id="avatarPreviewContainer" class="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 overflow-hidden shrink-0 flex items-center justify-center">
+                    <img id="avatarImg" src="" alt="Avatar" class="w-full h-full object-cover hidden">
+                    <i id="avatarPlaceholder" data-lucide="image" class="w-6 h-6 text-slate-500"></i>
+                  </div>
+                  <div class="flex-1">
+                    <label class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-3.5 py-2 rounded-xl cursor-pointer border border-slate-700 transition">
+                      <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                      <span>Upload Photo</span>
+                      <input type="file" accept="image/*" onchange="handleImageUpload(event, 'avatar')" class="hidden">
+                    </label>
+                    <p class="text-[11px] text-slate-500 mt-1">Automatically resized & compressed to keep your website fast.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Skills tags -->
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Skills & Tools <span class="text-slate-500 font-normal">(comma separated)</span></label>
+                <input type="text" id="inpSkills" oninput="updateData('skills', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="After Effects, Blender, 3D Modelling, Maya, Figma, Sound Design">
+                <p class="text-[11px] text-slate-500 mt-1">These will appear as sleek, stylish tag badges on your page.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Demo Reel (Video) -->
+          <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 sm:p-5">
+            <h2 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+              <i data-lucide="film" class="w-4 h-4 text-violet-400"></i>
+              Demo Reel / Showcase Video
+            </h2>
+            <p class="text-xs text-slate-400 mb-3">Paste your YouTube or Vimeo link to create an embedded responsive player.</p>
+
+            <div class="space-y-2">
+              <div class="relative">
+                <input type="text" id="inpReel" oninput="updateData('reelUrl', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3.5 py-2 text-white text-xs focus:ring-2 focus:ring-violet-500 focus:outline-none" placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/...">
+                <i data-lucide="play-circle" class="w-4 h-4 text-slate-500 absolute left-3 top-2.5"></i>
+              </div>
+              <p class="text-[11px] text-slate-500">Supports standard YouTube URLs, Shorts, and Vimeo links.</p>
+            </div>
+          </div>
+
+          <!-- 3. Projects Showcase -->
+          <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 sm:p-5">
+            <div class="flex items-center justify-between mb-2">
+              <div>
+                <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                  <i data-lucide="briefcase" class="w-4 h-4 text-emerald-400"></i>
+                  Projects Showcase
+                </h2>
+                <p class="text-xs text-slate-400">Show 3 to 6 of your best coursework or personal projects.</p>
+              </div>
+              <button onclick="addProject()" id="btnAddProject" class="text-xs font-medium text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>Add Project</span>
+              </button>
+            </div>
+
+            <!-- Dynamic Project List Container -->
+            <div id="projectsEditorContainer" class="space-y-4 mt-4">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- 4. Contact & Social Channels -->
+          <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 sm:p-5">
+            <h2 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+              <i data-lucide="send" class="w-4 h-4 text-pink-400"></i>
+              Contact & Social Channels
+            </h2>
+            <p class="text-xs text-slate-400 mb-4">Direct links for recruiters and collaborators to get in touch.</p>
+
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Email Address <span class="text-indigo-400 font-normal">(opens email client)</span></label>
+                <div class="relative">
+                  <input type="email" id="inpEmail" oninput="updateData('email', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-white text-xs focus:ring-2 focus:ring-pink-500 focus:outline-none" placeholder="name@college.edu">
+                  <i data-lucide="mail" class="w-4 h-4 text-slate-500 absolute left-3 top-2.5"></i>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">LinkedIn Profile</label>
+                <div class="relative">
+                  <input type="url" id="inpLinkedin" oninput="updateData('linkedin', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-white text-xs focus:ring-2 focus:ring-pink-500 focus:outline-none" placeholder="https://linkedin.com/in/username">
+                  <i data-lucide="linkedin" class="w-4 h-4 text-slate-500 absolute left-3 top-2.5"></i>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Instagram <span class="text-slate-500 font-normal">(Optional - hides if blank)</span></label>
+                <div class="relative">
+                  <input type="url" id="inpInstagram" oninput="updateData('instagram', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-white text-xs focus:ring-2 focus:ring-pink-500 focus:outline-none" placeholder="https://instagram.com/username">
+                  <i data-lucide="instagram" class="w-4 h-4 text-slate-500 absolute left-3 top-2.5"></i>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Behance / ArtStation <span class="text-slate-500 font-normal">(Optional - hides if blank)</span></label>
+                <div class="relative">
+                  <input type="url" id="inpBehance" oninput="updateData('behance', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-white text-xs focus:ring-2 focus:ring-pink-500 focus:outline-none" placeholder="https://behance.net/username">
+                  <i data-lucide="globe" class="w-4 h-4 text-slate-500 absolute left-3 top-2.5"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ================= DESIGN TAB ================= -->
+        <div id="designTabSection" class="space-y-6 hidden">
+
+          <!-- Ready-made Templates -->
+          <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 sm:p-5">
+            <h2 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+              <i data-lucide="layout-template" class="w-4 h-4 text-indigo-400"></i>
+              Pre-Crafted Templates
+            </h2>
+            <p class="text-xs text-slate-400 mb-4">Choose a curated starting aesthetic curated for media & visual artists.</p>
+
+            <div class="grid grid-cols-2 gap-3" id="templatePicker">
+              <!-- Cinematic Dark -->
+              <button onclick="applyPresetTemplate('cinematic')" id="tmpl-cinematic" class="p-3 text-left rounded-xl border border-indigo-500 bg-slate-950/80 hover:border-indigo-400 transition relative overflow-hidden group">
+                <div class="h-2 w-8 rounded-full bg-amber-400 mb-2"></div>
+                <div class="font-bold text-xs text-white">Cinematic Dark</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Atmospheric slate, gold neon accents, high contrast</p>
+              </button>
+
+              <!-- Clean Minimal -->
+              <button onclick="applyPresetTemplate('minimal')" id="tmpl-minimal" class="p-3 text-left rounded-xl border border-slate-800 bg-slate-950/80 hover:border-slate-700 transition relative overflow-hidden group">
+                <div class="h-2 w-8 rounded-full bg-neutral-900 mb-2"></div>
+                <div class="font-bold text-xs text-white">Clean Minimal</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Light gallery style, crisp editorial typography</p>
+              </button>
+
+              <!-- Bold Colourful -->
+              <button onclick="applyPresetTemplate('colourful')" id="tmpl-colourful" class="p-3 text-left rounded-xl border border-slate-800 bg-slate-950/80 hover:border-slate-700 transition relative overflow-hidden group">
+                <div class="h-2 w-8 rounded-full bg-pink-500 mb-2"></div>
+                <div class="font-bold text-xs text-white">Bold Colourful</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Vibrant dynamic gradients & punchy borders</p>
+              </button>
+
+              <!-- Photo Gallery -->
+              <button onclick="applyPresetTemplate('gallery')" id="tmpl-gallery" class="p-3 text-left rounded-xl border border-slate-800 bg-slate-950/80 hover:border-slate-700 transition relative overflow-hidden group">
+                <div class="h-2 w-8 rounded-full bg-sky-400 mb-2"></div>
+                <div class="font-bold text-xs text-white">Photo Gallery</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Editorial focus on imagery with modern overlays</p>
+              </button>
+            </div>
+          </div>
+
+          <!-- Color & Appearance Controls -->
+          <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 sm:p-5 space-y-4">
+            <h2 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+              <i data-lucide="sun-moon" class="w-4 h-4 text-amber-400"></i>
+              Colors & Light / Dark Mode
+            </h2>
+
+            <!-- Light / Dark toggle -->
+            <div class="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <span class="text-xs font-medium text-slate-300">Website Theme Mode</span>
+              <div class="flex bg-slate-900 p-1 rounded-lg border border-slate-800 text-xs">
+                <button onclick="setThemeMode('dark')" id="modeBtnDark" class="px-3 py-1 rounded bg-indigo-600 text-white font-medium flex items-center gap-1">
+                  <i data-lucide="moon" class="w-3 h-3"></i> Dark
+                </button>
+                <button onclick="setThemeMode('light')" id="modeBtnLight" class="px-3 py-1 rounded text-slate-400 hover:text-white flex items-center gap-1">
+                  <i data-lucide="sun" class="w-3 h-3"></i> Light
+                </button>
+              </div>
+            </div>
+
+            <!-- Custom Accent Color -->
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-2">Accent Colour (Buttons, Highlights, Links)</label>
+              <div class="flex items-center gap-3">
+                <input type="color" id="accentColorPicker" oninput="updateDesign('accentColor', this.value)" class="w-10 h-10 rounded-xl border border-slate-700 bg-slate-800 cursor-pointer p-0.5">
+                <div class="flex flex-wrap gap-1.5 flex-1">
+                  <!-- Quick Preset Dots -->
+                  <button onclick="setAccentPreset('#f59e0b')" class="w-6 h-6 rounded-full bg-amber-500 hover:scale-110 transition border border-white/20"></button>
+                  <button onclick="setAccentPreset('#6366f1')" class="w-6 h-6 rounded-full bg-indigo-500 hover:scale-110 transition border border-white/20"></button>
+                  <button onclick="setAccentPreset('#ec4899')" class="w-6 h-6 rounded-full bg-pink-500 hover:scale-110 transition border border-white/20"></button>
+                  <button onclick="setAccentPreset('#10b981')" class="w-6 h-6 rounded-full bg-emerald-500 hover:scale-110 transition border border-white/20"></button>
+                  <button onclick="setAccentPreset('#06b6d4')" class="w-6 h-6 rounded-full bg-cyan-500 hover:scale-110 transition border border-white/20"></button>
+                  <button onclick="setAccentPreset('#f43f5e')" class="w-6 h-6 rounded-full bg-rose-500 hover:scale-110 transition border border-white/20"></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Custom Background Color -->
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-2">Page Background Colour</label>
+              <div class="flex items-center gap-3">
+                <input type="color" id="bgColorPicker" oninput="updateDesign('bgColor', this.value)" class="w-10 h-10 rounded-xl border border-slate-700 bg-slate-800 cursor-pointer p-0.5">
+                <div class="flex flex-wrap gap-1.5 flex-1">
+                  <button onclick="setBgPreset('#0b0f17')" class="w-6 h-6 rounded-full bg-[#0b0f17] hover:scale-110 transition border border-white/20" title="Dark Slate"></button>
+                  <button onclick="setBgPreset('#000000')" class="w-6 h-6 rounded-full bg-[#000000] hover:scale-110 transition border border-white/20" title="Pure Black"></button>
+                  <button onclick="setBgPreset('#121824')" class="w-6 h-6 rounded-full bg-[#121824] hover:scale-110 transition border border-white/20" title="Midnight Navy"></button>
+                  <button onclick="setBgPreset('#f8fafc')" class="w-6 h-6 rounded-full bg-[#f8fafc] hover:scale-110 transition border border-slate-400" title="Clean White"></button>
+                  <button onclick="setBgPreset('#f1f5f9')" class="w-6 h-6 rounded-full bg-[#f1f5f9] hover:scale-110 transition border border-slate-400" title="Soft Grey"></button>
+                  <button onclick="setBgPreset('#fef3c7')" class="w-6 h-6 rounded-full bg-[#fef3c7] hover:scale-110 transition border border-slate-400" title="Warm Cream"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Typography -->
+          <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 sm:p-5 space-y-4">
+            <h2 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+              <i data-lucide="type" class="w-4 h-4 text-cyan-400"></i>
+              Typography
+            </h2>
+
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1.5">Selected Font Family</label>
+              <select id="fontSelector" onchange="updateDesign('font', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <option value="Inter">Inter (Clean, Modern, Tech)</option>
+                <option value="Space Grotesk">Space Grotesk (Design Studio, Futuristic)</option>
+                <option value="Playfair Display">Playfair Display (Editorial, Fashion, Elegant Serif)</option>
+                <option value="Outfit">Outfit (Friendly, Geometric, Contemporary)</option>
+                <option value="Syne">Syne (Artistic, Experimental, Bold Cinema)</option>
+                <option value="DM Sans">DM Sans (Minimalist, Balanced, Readable)</option>
+              </select>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-xs font-medium text-slate-300">Base Font Scale</label>
+                <span id="fontSizeDisplay" class="text-xs text-indigo-400 font-mono">16px</span>
+              </div>
+              <input type="range" id="fontSizeSlider" min="14" max="20" step="1" value="16" oninput="updateFontSize(this.value)" class="w-full accent-indigo-500">
+            </div>
+          </div>
+
+          <!-- Project Showcase Layout -->
+          <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 sm:p-5">
+            <h2 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+              <i data-lucide="grid" class="w-4 h-4 text-emerald-400"></i>
+              Project Cards Layout
+            </h2>
+            <p class="text-xs text-slate-400 mb-3">Choose how your project works are presented to visitors.</p>
+
+            <div class="grid grid-cols-2 gap-3">
+              <button onclick="setProjectLayout('grid')" id="layoutBtnGrid" class="p-3 rounded-xl border border-indigo-500 bg-slate-950 flex flex-col items-center gap-2 text-xs font-medium text-white transition">
+                <i data-lucide="layout-grid" class="w-5 h-5 text-indigo-400"></i>
+                <span>Responsive Grid</span>
+              </button>
+              <button onclick="setProjectLayout('stacked')" id="layoutBtnStacked" class="p-3 rounded-xl border border-slate-800 bg-slate-950 flex flex-col items-center gap-2 text-xs font-medium text-slate-400 hover:text-white transition">
+                <i data-lucide="rows" class="w-5 h-5"></i>
+                <span>One-by-One (Editorial)</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ================= SECTIONS REORDER & VISIBILITY TAB ================= -->
+        <div id="sectionsTabSection" class="space-y-4 hidden">
+          <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 sm:p-5">
+            <h2 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+              <i data-lucide="sliders" class="w-4 h-4 text-indigo-400"></i>
+              Section Ordering & Visibility
+            </h2>
+            <p class="text-xs text-slate-400 mb-4">Re-arrange sections up or down, or hide ones you don't need right now.</p>
+
+            <div id="sectionsListContainer" class="space-y-2">
+              <!-- Dynamically generated section controls -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- RIGHT PANEL: Live Interactive Preview -->
+    <section id="previewPanel" class="flex-1 bg-slate-900/50 flex flex-col h-full overflow-hidden relative">
+
+      <!-- Viewport Simulation Container -->
+      <div class="flex-1 overflow-y-auto p-2 sm:p-6 flex items-start justify-center">
+        <div id="previewWrapper" class="w-full max-w-full bg-slate-950 rounded-2xl shadow-2xl border border-slate-800/60 overflow-hidden relative min-h-[600px]">
+          
+          <!-- Simulated Browser Bar (aesthetic chrome) -->
+          <div class="h-9 bg-slate-900/90 border-b border-slate-800 px-4 flex items-center justify-between text-xs text-slate-400 select-none">
+            <div class="flex items-center gap-1.5">
+              <div class="w-2.5 h-2.5 rounded-full bg-rose-500/80"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-amber-500/80"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></div>
+            </div>
+            <div class="flex items-center gap-1.5 bg-slate-950 px-3 py-1 rounded-md text-[11px] text-slate-300 font-mono border border-slate-800 max-w-[280px] truncate">
+              <i data-lucide="lock" class="w-2.5 h-2.5 text-emerald-400"></i>
+              <span id="previewUrlLabel">https://portfolio.student.me</span>
+            </div>
+            <div class="w-6"></div>
+          </div>
+
+          <!-- THE PREVIEW CANVAS (Renders the student portfolio) -->
+          <div id="livePortfolioRoot" class="w-full min-h-[580px] overflow-x-hidden">
+            <!-- Dynamic Content injected here -->
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= TOAST NOTIFICATION ================= -->
+  <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 border border-slate-700 text-white text-xs px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 transform translate-y-20 opacity-0 transition duration-300 z-50 pointer-events-none">
+    <i data-lucide="info" class="w-4 h-4 text-indigo-400" id="toastIcon"></i>
+    <span id="toastMsg">Changes saved</span>
+  </div>
+
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
+  <script>
+    /* -------------------------------------------------------------
+       STATE MANAGEMENT & SAMPLE DATA
+       ------------------------------------------------------------- */
+    const STORAGE_KEY = 'portfolio_builder_student_data_v1';
+
+    // Sample default student portfolio
+    const defaultData = {
+      name: "Maya Chen",
+      course: "2nd Year Motion Graphics & Visual Effects • Royal College of Art",
+      bio: "Visual artist and 3D animator exploring cinematic world-building, kinetic typography, and surreal procedural dynamics. Looking for summer 2027 junior motion design internships.",
+      skills: "After Effects, Blender 3D, Houdini, Cinema 4D, Premiere Pro, Figma, TouchDesigner, Sound Design",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
+      reelUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // Safe placeholder video
+      email: "maya.chen.art@gmail.com",
+      linkedin: "https://linkedin.com",
+      instagram: "https://instagram.com",
+      behance: "https://behance.net",
+      
+      // Design & Layout settings
+      themeMode: "dark", // 'dark' | 'light'
+      accentColor: "#f59e0b", // Warm gold / amber
+      bgColor: "#0b0f17",
+      font: "Space Grotesk",
+      fontSize: 16,
+      projectLayout: "grid", // 'grid' | 'stacked'
+
+      // Section order and visibility
+      sections: [
+        { id: "hero", name: "About & Hero", visible: true },
+        { id: "reel", name: "Demo Reel Video", visible: true },
+        { id: "projects", name: "Projects Showcase", visible: true },
+        { id: "skills", name: "Skills & Tools", visible: true },
+        { id: "contact", name: "Contact & Links", visible: true }
+      ],
+
+      // 3 initial sample projects (up to 6 allowed)
+      projects: [
+        {
+          id: "p1",
+          title: "Neon Echoes: Kinetic Brand Identity",
+          desc: "Experimental 3D branding and motion graphics exploration built for an electronic music festival in London.",
+          image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+          link: "https://behance.net"
+        },
+        {
+          id: "p2",
+          title: "Solitude — Short Sci-Fi Teaser",
+          desc: "Lighting and compositing study in Unreal Engine 5 focusing on atmospheric volumetric lighting and environmental storytelling.",
+          image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=800&q=80",
+          link: "https://vimeo.com"
+        },
+        {
+          id: "p3",
+          title: "Fluidity: Procedural Shader Studies",
+          desc: "A series of real-time procedural simulations and interactive liquid sculptures designed in Blender and TouchDesigner.",
+          image: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=800&q=80",
+          link: ""
+        }
+      ]
+    };
+
+    // Active state cloned from storage or defaults
+    let appData = {};
+
+    function loadState() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          appData = JSON.parse(stored);
+          // Safety merge in case new attributes were added
+          appData = { ...defaultData, ...appData };
+        } else {
+          appData = JSON.parse(JSON.stringify(defaultData));
+        }
+      } catch (err) {
+        console.error("Failed to load local storage:", err);
+        appData = JSON.parse(JSON.stringify(defaultData));
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        triggerSaveBadge();
+      } catch (e) {
+        console.warn("Storage quota may be reached due to base64 images:", e);
+      }
+    }
+
+    function triggerSaveBadge() {
+      const badge = document.getElementById('saveBadge');
+      if (badge) {
+        badge.classList.remove('hidden');
+        clearTimeout(window._saveBadgeTimer);
+        window._saveBadgeTimer = setTimeout(() => {
+          badge.classList.add('hidden');
+        }, 2200);
+      }
+    }
+
+    function showToast(message, iconName = 'check') {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      const toastIcon = document.getElementById('toastIcon');
+      if (!toast) return;
+
+      toastMsg.innerText = message;
+      if (toastIcon) {
+        toastIcon.setAttribute('data-lucide', iconName);
+        lucide.createIcons();
+      }
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2600);
+    }
+
+    /* -------------------------------------------------------------
+       INITIALIZATION & FORM POPULATION
+       ------------------------------------------------------------- */
+    window.onload = function() {
+      loadState();
+      populateFormFields();
+      renderProjectsEditor();
+      renderSectionsList();
+      renderPreview();
+      lucide.createIcons();
+    };
+
+    function populateFormFields() {
+      // Content fields
+      document.getElementById('inpName').value = appData.name || '';
+      document.getElementById('inpCourse').value = appData.course || '';
+      document.getElementById('inpBio').value = appData.bio || '';
+      document.getElementById('inpSkills').value = appData.skills || '';
+      document.getElementById('inpReel').value = appData.reelUrl || '';
+      document.getElementById('inpEmail').value = appData.email || '';
+      document.getElementById('inpLinkedin').value = appData.linkedin || '';
+      document.getElementById('inpInstagram').value = appData.instagram || '';
+      document.getElementById('inpBehance').value = appData.behance || '';
+
+      // Avatar thumbnail
+      const avatarImg = document.getElementById('avatarImg');
+      const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+      if (appData.avatar) {
+        avatarImg.src = appData.avatar;
+        avatarImg.classList.remove('hidden');
+        avatarPlaceholder.classList.add('hidden');
+      } else {
+        avatarImg.classList.add('hidden');
+        avatarPlaceholder.classList.remove('hidden');
+      }
+
+      // Design settings
+      document.getElementById('fontSelector').value = appData.font || 'Space Grotesk';
+      document.getElementById('fontSizeSlider').value = appData.fontSize || 16;
+      document.getElementById('fontSizeDisplay').innerText = (appData.fontSize || 16) + 'px';
+      document.getElementById('accentColorPicker').value = appData.accentColor || '#f59e0b';
+      document.getElementById('bgColorPicker').value = appData.bgColor || '#0b0f17';
+
+      updateThemeButtonsUI();
+      updateLayoutButtonsUI();
+    }
+
+    /* -------------------------------------------------------------
+       DATA UPDATE HANDLERS
+       ------------------------------------------------------------- */
+    function updateData(key, value) {
+      appData[key] = value;
+      saveState();
+      renderPreview();
+    }
+
+    function updateDesign(key, value) {
+      appData[key] = value;
+      saveState();
+      renderPreview();
+    }
+
+    function updateFontSize(val) {
+      appData.fontSize = parseInt(val, 10);
+      document.getElementById('fontSizeDisplay').innerText = val + 'px';
+      saveState();
+      renderPreview();
+    }
+
+    function setAccentPreset(hex) {
+      appData.accentColor = hex;
+      document.getElementById('accentColorPicker').value = hex;
+      saveState();
+      renderPreview();
+    }
+
+    function setBgPreset(hex) {
+      appData.bgColor = hex;
+      document.getElementById('bgColorPicker').value = hex;
+      saveState();
+      renderPreview();
+    }
+
+    function setThemeMode(mode) {
+      appData.themeMode = mode;
+      if (mode === 'light' && (appData.bgColor === '#0b0f17' || appData.bgColor === '#000000' || appData.bgColor === '#121824')) {
+        appData.bgColor = '#f8fafc';
+        document.getElementById('bgColorPicker').value = '#f8fafc';
+      } else if (mode === 'dark' && (appData.bgColor === '#f8fafc' || appData.bgColor === '#f1f5f9' || appData.bgColor === '#fef3c7')) {
+        appData.bgColor = '#0b0f17';
+        document.getElementById('bgColorPicker').value = '#0b0f17';
+      }
+      updateThemeButtonsUI();
+      saveState();
+      renderPreview();
+    }
+
+    function updateThemeButtonsUI() {
+      const darkBtn = document.getElementById('modeBtnDark');
+      const lightBtn = document.getElementById('modeBtnLight');
+      if (appData.themeMode === 'dark') {
+        darkBtn.className = "px-3 py-1 rounded bg-indigo-600 text-white font-medium flex items-center gap-1 shadow-sm";
+        lightBtn.className = "px-3 py-1 rounded text-slate-400 hover:text-white flex items-center gap-1";
+      } else {
+        lightBtn.className = "px-3 py-1 rounded bg-indigo-600 text-white font-medium flex items-center gap-1 shadow-sm";
+        darkBtn.className = "px-3 py-1 rounded text-slate-400 hover:text-white flex items-center gap-1";
+      }
+    }
+
+    function setProjectLayout(layout) {
+      appData.projectLayout = layout;
+      updateLayoutButtonsUI();
+      saveState();
+      renderPreview();
+    }
+
+    function updateLayoutButtonsUI() {
+      const gridBtn = document.getElementById('layoutBtnGrid');
+      const stackBtn = document.getElementById('layoutBtnStacked');
+      if (appData.projectLayout === 'grid') {
+        gridBtn.className = "p-3 rounded-xl border border-indigo-500 bg-slate-950 flex flex-col items-center gap-2 text-xs font-medium text-white transition";
+        stackBtn.className = "p-3 rounded-xl border border-slate-800 bg-slate-950 flex flex-col items-center gap-2 text-xs font-medium text-slate-400 hover:text-white transition";
+      } else {
+        stackBtn.className = "p-3 rounded-xl border border-indigo-500 bg-slate-950 flex flex-col items-center gap-2 text-xs font-medium text-white transition";
+        gridBtn.className = "p-3 rounded-xl border border-slate-800 bg-slate-950 flex flex-col items-center gap-2 text-xs font-medium text-slate-400 hover:text-white transition";
+      }
+    }
+
+    /* -------------------------------------------------------------
+       PRESET TEMPLATES
+       ------------------------------------------------------------- */
+    function applyPresetTemplate(type) {
+      if (type === 'cinematic') {
+        appData.themeMode = 'dark';
+        appData.bgColor = '#090d16';
+        appData.accentColor = '#f59e0b';
+        appData.font = 'Space Grotesk';
+        appData.projectLayout = 'grid';
+      } else if (type === 'minimal') {
+        appData.themeMode = 'light';
+        appData.bgColor = '#ffffff';
+        appData.accentColor = '#1e293b';
+        appData.font = 'Playfair Display';
+        appData.projectLayout = 'stacked';
+      } else if (type === 'colourful') {
+        appData.themeMode = 'dark';
+        appData.bgColor = '#0f172a';
+        appData.accentColor = '#ec4899';
+        appData.font = 'Outfit';
+        appData.projectLayout = 'grid';
+      } else if (type === 'gallery') {
+        appData.themeMode = 'dark';
+        appData.bgColor = '#050507';
+        appData.accentColor = '#38bdf8';
+        appData.font = 'Syne';
+        appData.projectLayout = 'grid';
+      }
+
+      // Update inputs
+      document.getElementById('fontSelector').value = appData.font;
+      document.getElementById('accentColorPicker').value = appData.accentColor;
+      document.getElementById('bgColorPicker').value = appData.bgColor;
+      updateThemeButtonsUI();
+      updateLayoutButtonsUI();
+      saveState();
+      renderPreview();
+      showToast(`Applied ${type.charAt(0).toUpperCase() + type.slice(1)} Template!`);
+    }
+
+    /* -------------------------------------------------------------
+       IMAGE COMPRESSION & UPLOAD ENGINE
+       ------------------------------------------------------------- */
+    function handleImageUpload(event, targetType, projectIndex = null) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Show temporary processing state
+      showToast("Compressing photo...", "sparkles");
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          // Compress using off-screen HTML5 Canvas
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+
+          // Maximum dimensions to keep file size ultra low (~80-160kb)
+          const MAX_WIDTH = targetType === 'avatar' ? 400 : 960;
+          const MAX_HEIGHT = targetType === 'avatar' ? 400 : 720;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Export compressed JPEG
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+
+          if (targetType === 'avatar') {
+            appData.avatar = compressedDataUrl;
+            const avatarImg = document.getElementById('avatarImg');
+            avatarImg.src = compressedDataUrl;
+            avatarImg.classList.remove('hidden');
+            document.getElementById('avatarPlaceholder').classList.add('hidden');
+          } else if (targetType === 'project' && projectIndex !== null) {
+            appData.projects[projectIndex].image = compressedDataUrl;
+            renderProjectsEditor();
+          }
+
+          saveState();
+          renderPreview();
+          showToast("Photo embedded & compressed!", "check");
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    /* -------------------------------------------------------------
+       PROJECTS CRUD OPERATIONS
+       ------------------------------------------------------------- */
+    function renderProjectsEditor() {
+      const container = document.getElementById('projectsEditorContainer');
+      const addBtn = document.getElementById('btnAddProject');
+      container.innerHTML = '';
+
+      if (appData.projects.length >= 6) {
+        addBtn.classList.add('opacity-50', 'pointer-events-none');
+      } else {
+        addBtn.classList.remove('opacity-50', 'pointer-events-none');
+      }
+
+      appData.projects.forEach((proj, idx) => {
+        const item = document.createElement('div');
+        item.className = "bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-3 relative";
+        item.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-full bg-slate-800 text-slate-300 text-[10px] flex items-center justify-center">${idx + 1}</span>
+              Project ${idx + 1}
+            </span>
+            <div class="flex items-center gap-1">
+              ${idx > 0 ? `<button onclick="moveProject(${idx}, -1)" class="p-1 hover:text-white text-slate-500 rounded" title="Move Up"><i data-lucide="arrow-up" class="w-3.5 h-3.5"></i></button>` : ''}
+              ${idx < appData.projects.length - 1 ? `<button onclick="moveProject(${idx}, 1)" class="p-1 hover:text-white text-slate-500 rounded" title="Move Down"><i data-lucide="arrow-down" class="w-3.5 h-3.5"></i></button>` : ''}
+              ${appData.projects.length > 1 ? `<button onclick="deleteProject(${idx})" class="p-1 text-rose-400/80 hover:text-rose-400 hover:bg-rose-500/10 rounded ml-1" title="Delete Project"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Project Title</label>
+            <input type="text" value="${escapeHtml(proj.title)}" oninput="updateProjectField(${idx}, 'title', this.value)" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-white text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. Kinetic Brand Identity">
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Description (1–2 lines)</label>
+            <textarea rows="2" oninput="updateProjectField(${idx}, 'desc', this.value)" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-white text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none resize-none" placeholder="Brief note on your role, software used, or concept">${escapeHtml(proj.desc)}</textarea>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Artwork / Thumbnail</label>
+            <div class="flex items-center gap-3">
+              <div class="w-16 h-12 rounded-lg bg-slate-900 border border-slate-800 overflow-hidden shrink-0">
+                ${proj.image ? `<img src="${proj.image}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-slate-600"><i data-lucide="image" class="w-4 h-4"></i></div>`}
+              </div>
+              <label class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-3 py-1.5 rounded-lg cursor-pointer border border-slate-700 flex items-center gap-1.5 transition">
+                <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                <span>Change Image</span>
+                <input type="file" accept="image/*" onchange="handleImageUpload(event, 'project', ${idx})" class="hidden">
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">External Link <span class="text-slate-500 font-normal">(Optional — Behance, Artstation, Live site)</span></label>
+            <input type="url" value="${escapeHtml(proj.link || '')}" oninput="updateProjectField(${idx}, 'link', this.value)" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-white text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none" placeholder="https://...">
+          </div>
+        `;
+        container.appendChild(item);
+      });
+
+      lucide.createIcons();
+    }
+
+    function addProject() {
+      if (appData.projects.length >= 6) {
+        showToast("Maximum of 6 projects reached", "alert-circle");
+        return;
+      }
+      appData.projects.push({
+        id: "p" + Date.now(),
+        title: "New Project",
+        desc: "Concept development and visual execution showcase.",
+        image: "https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=800&q=80",
+        link: ""
+      });
+      saveState();
+      renderProjectsEditor();
+      renderPreview();
+      showToast("Added project slot");
+    }
+
+    function deleteProject(index) {
+      if (appData.projects.length <= 1) return;
+      appData.projects.splice(index, 1);
+      saveState();
+      renderProjectsEditor();
+      renderPreview();
+      showToast("Project removed");
+    }
+
+    function moveProject(index, direction) {
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= appData.projects.length) return;
+      const temp = appData.projects[index];
+      appData.projects[index] = appData.projects[targetIndex];
+      appData.projects[targetIndex] = temp;
+      saveState();
+      renderProjectsEditor();
+      renderPreview();
+    }
+
+    function updateProjectField(index, field, value) {
+      appData.projects[index][field] = value;
+      saveState();
+      renderPreview();
+    }
+
+    /* -------------------------------------------------------------
+       SECTION ORDERING & VISIBILITY
+       ------------------------------------------------------------- */
+    function renderSectionsList() {
+      const container = document.getElementById('sectionsListContainer');
+      container.innerHTML = '';
+
+      appData.sections.forEach((sec, idx) => {
+        const item = document.createElement('div');
+        item.className = "flex items-center justify-between p-3 bg-slate-950 border border-slate-800 rounded-xl";
+        item.innerHTML = `
+          <div class="flex items-center gap-3">
+            <input type="checkbox" id="sec-chk-${sec.id}" ${sec.visible ? 'checked' : ''} onchange="toggleSectionVisibility('${sec.id}', this.checked)" class="w-4 h-4 rounded text-indigo-600 focus:ring-0 focus:ring-offset-0 bg-slate-900 border-slate-700 cursor-pointer">
+            <label for="sec-chk-${sec.id}" class="text-xs font-medium text-slate-200 cursor-pointer select-none">
+              ${sec.name}
+            </label>
+          </div>
+          <div class="flex items-center gap-1">
+            ${idx > 0 ? `<button onclick="moveSection(${idx}, -1)" class="p-1 hover:text-white text-slate-400 rounded hover:bg-slate-800" title="Move Up"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>` : `<span class="w-6"></span>`}
+            ${idx < appData.sections.length - 1 ? `<button onclick="moveSection(${idx}, 1)" class="p-1 hover:text-white text-slate-400 rounded hover:bg-slate-800" title="Move Down"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>` : `<span class="w-6"></span>`}
+          </div>
+        `;
+        container.appendChild(item);
+      });
+
+      lucide.createIcons();
+    }
+
+    function toggleSectionVisibility(secId, isVisible) {
+      const section = appData.sections.find(s => s.id === secId);
+      if (section) {
+        section.visible = isVisible;
+        saveState();
+        renderPreview();
+      }
+    }
+
+    function moveSection(index, direction) {
+      const target = index + direction;
+      if (target < 0 || target >= appData.sections.length) return;
+      const temp = appData.sections[index];
+      appData.sections[index] = appData.sections[target];
+      appData.sections[target] = temp;
+      saveState();
+      renderSectionsList();
+      renderPreview();
+    }
+
+    /* -------------------------------------------------------------
+       VIDEO URL PARSER (YouTube & Vimeo)
+       ------------------------------------------------------------- */
+    function getEmbedVideoMarkup(url) {
+      if (!url || !url.trim()) return null;
+      url = url.trim();
+
+      // YouTube matching
+      let ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/);
+      if (ytMatch && ytMatch[1]) {
+        return `
+          <div class="relative w-full aspect-video rounded-2xl overflow-hidden shadow-2xl bg-black border border-white/10">
+            <iframe class="absolute inset-0 w-full h-full" src="https://www.youtube.com/embed/${ytMatch[1]}?rel=0&modestbranding=1" title="Demo Reel" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+        `;
+      }
+
+      // Vimeo matching
+      let vimeoMatch = url.match(/(?:vimeo\.com\/)(\d+)/);
+      if (vimeoMatch && vimeoMatch[1]) {
+        return `
+          <div class="relative w-full aspect-video rounded-2xl overflow-hidden shadow-2xl bg-black border border-white/10">
+            <iframe class="absolute inset-0 w-full h-full" src="https://player.vimeo.com/video/${vimeoMatch[1]}?title=0&byline=0&portrait=0" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="p-8 rounded-2xl bg-slate-800/40 border border-slate-700/60 text-center">
+          <p class="text-xs text-slate-400">Please enter a valid YouTube or Vimeo video link in the left panel to play your demo reel.</p>
+        </div>
+      `;
+    }
+
+    /* -------------------------------------------------------------
+       LIVE PREVIEW GENERATOR
+       ------------------------------------------------------------- */
+    function renderPreview() {
+      const root = document.getElementById('livePortfolioRoot');
+      const isDark = appData.themeMode === 'dark';
+      const bg = appData.bgColor || (isDark ? '#0b0f17' : '#ffffff');
+      const textColor = isDark ? '#f8fafc' : '#0f172a';
+      const mutedColor = isDark ? '#94a3b8' : '#64748b';
+      const cardBg = isDark ? 'rgba(30, 41, 59, 0.45)' : 'rgba(255, 255, 255, 0.9)';
+      const cardBorder = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
+      const accent = appData.accentColor || '#f59e0b';
+      const font = appData.font || 'Space Grotesk';
+      const baseSize = appData.fontSize || 16;
+
+      // Update URL simulated label
+      const cleanName = (appData.name || 'portfolio').toLowerCase().replace(/\s+/g, '');
+      const urlLabel = document.getElementById('previewUrlLabel');
+      if (urlLabel) urlLabel.innerText = `https://${cleanName}.design.me`;
+
+      // Build section content chunks
+      const sectionHtmlMap = {
+        // Hero / About
+        hero: `
+          <header class="py-12 sm:py-16 md:py-20 px-6 sm:px-10 max-w-5xl mx-auto flex flex-col md:flex-row items-center md:items-start gap-8 sm:gap-10">
+            ${appData.avatar ? `
+              <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl overflow-hidden shrink-0 shadow-2xl relative group ring-4" style="--tw-ring-color: ${accent}25; ring-color: ${accent}25;">
+                <img src="${appData.avatar}" alt="${escapeHtml(appData.name)}" class="w-full h-full object-cover">
+              </div>
+            ` : ''}
+            <div class="text-center md:text-left flex-1 space-y-3">
+              <div class="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-1" style="background: ${accent}15; color: ${accent}; border: 1px solid ${accent}30;">
+                ${escapeHtml(appData.course || 'Media & Design Student')}
+              </div>
+              <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight" style="color: ${textColor};">
+                ${escapeHtml(appData.name || 'Your Name')}
+              </h1>
+              <p class="text-base sm:text-lg leading-relaxed max-w-2xl font-light" style="color: ${mutedColor};">
+                ${escapeHtml(appData.bio || 'Add your bio in the editor to introduce your craft and goals.')}
+              </p>
+              <div class="pt-2 flex flex-wrap items-center justify-center md:justify-start gap-3">
+                ${appData.email ? `
+                  <a href="mailto:${encodeURIComponent(appData.email)}" class="px-5 py-2.5 rounded-xl font-semibold text-xs sm:text-sm text-white shadow-lg inline-flex items-center gap-2 transition hover:opacity-90 active:scale-95" style="background: ${accent}; color: ${isLightColor(accent) ? '#0f172a' : '#ffffff'};">
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                    <span>Get in Touch</span>
+                  </a>
+                ` : ''}
+                ${appData.linkedin ? `
+                  <a href="${escapeHtml(appData.linkedin)}" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium border inline-flex items-center gap-2 transition hover:opacity-80" style="border-color: ${cardBorder}; background: ${cardBg}; color: ${textColor};">
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.25c-.95 0-1.72.78-1.72 1.73s.77 1.73 1.72 1.73 1.73-.78 1.73-1.73-.78-1.73-1.73-1.73Z"/></svg>
+                    <span>LinkedIn</span>
+                  </a>
+                ` : ''}
+              </div>
+            </div>
+          </header>
+        `,
+
+        // Demo Reel
+        reel: `
+          <section class="py-10 px-6 sm:px-10 max-w-5xl mx-auto">
+            <div class="mb-5 flex items-center justify-between">
+              <div>
+                <h2 class="text-xl sm:text-2xl font-bold tracking-tight" style="color: ${textColor};">Demo Reel</h2>
+                <p class="text-xs sm:text-sm" style="color: ${mutedColor};">Selected motion, visual effects & cinematography works</p>
+              </div>
+              <span class="text-xs px-2.5 py-1 rounded-md font-mono" style="background: ${accent}20; color: ${accent};">HD 1080p</span>
+            </div>
+            ${getEmbedVideoMarkup(appData.reelUrl)}
+          </section>
+        `,
+
+        // Projects
+        projects: `
+          <section class="py-12 sm:py-16 px-6 sm:px-10 max-w-5xl mx-auto">
+            <div class="mb-8">
+              <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: ${textColor};">Featured Projects</h2>
+              <p class="text-xs sm:text-sm mt-1" style="color: ${mutedColor};">Curated creative coursework, client briefs & explorations</p>
+            </div>
+
+            <div class="${appData.projectLayout === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8' : 'space-y-12'}">
+              ${appData.projects.map((p, idx) => `
+                <article class="group rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-1.5 shadow-xl border flex flex-col" style="background: ${cardBg}; border-color: ${cardBorder};">
+                  ${p.image ? `
+                    <div class="w-full ${appData.projectLayout === 'grid' ? 'h-52 sm:h-60' : 'h-64 sm:h-96'} overflow-hidden relative bg-black/40 shrink-0">
+                      <img src="${p.image}" alt="${escapeHtml(p.title)}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                    </div>
+                  ` : ''}
+                  <div class="p-6 sm:p-7 flex-1 flex flex-col justify-between">
+                    <div>
+                      <div class="text-[11px] font-bold uppercase tracking-wider mb-1.5" style="color: ${accent};">Project 0${idx + 1}</div>
+                      <h3 class="text-lg sm:text-xl font-bold tracking-tight mb-2" style="color: ${textColor};">
+                        ${escapeHtml(p.title || 'Untitled Project')}
+                      </h3>
+                      <p class="text-xs sm:text-sm leading-relaxed mb-4" style="color: ${mutedColor};">
+                        ${escapeHtml(p.desc || '')}
+                      </p>
+                    </div>
+                    ${p.link ? `
+                      <div class="pt-2">
+                        <a href="${escapeHtml(p.link)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-xs font-semibold hover:underline" style="color: ${accent};">
+                          <span>View Project Case Study</span>
+                          <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                      </div>
+                    ` : ''}
+                  </div>
+                </article>
+              `).join('')}
+            </div>
+          </section>
+        `,
+
+        // Skills
+        skills: `
+          <section class="py-10 px-6 sm:px-10 max-w-5xl mx-auto">
+            <div class="p-6 sm:p-8 rounded-3xl border" style="background: ${cardBg}; border-color: ${cardBorder};">
+              <h2 class="text-lg sm:text-xl font-bold tracking-tight mb-2" style="color: ${textColor};">Skills, Tools & Technologies</h2>
+              <p class="text-xs sm:text-sm mb-4" style="color: ${mutedColor};">Software mastery and artistic competencies</p>
+              <div class="flex flex-wrap gap-2 pt-1">
+                ${(appData.skills || '').split(',').filter(s => s.trim().length > 0).map(skill => `
+                  <span class="px-3 py-1.5 rounded-xl text-xs font-medium border" style="background: ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'}; border-color: ${cardBorder}; color: ${textColor};">
+                    ${escapeHtml(skill.trim())}
+                  </span>
+                `).join('')}
+              </div>
+            </div>
+          </section>
+        `,
+
+        // Contact & Footer
+        contact: `
+          <footer class="py-16 sm:py-20 px-6 sm:px-10 max-w-5xl mx-auto border-t mt-12 text-center" style="border-color: ${cardBorder};">
+            <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-3" style="color: ${textColor};">Let's Connect & Collaborate</h2>
+            <p class="text-xs sm:text-sm max-w-md mx-auto mb-6" style="color: ${mutedColor};">
+              Available for freelance collaborations, grad roles, and studio internships.
+            </p>
+            <div class="flex flex-wrap items-center justify-center gap-3">
+              ${appData.email ? `
+                <a href="mailto:${encodeURIComponent(appData.email)}" class="px-6 py-3 rounded-2xl font-bold text-xs sm:text-sm text-white shadow-xl inline-flex items-center gap-2 transition hover:opacity-95 active:scale-95" style="background: ${accent}; color: ${isLightColor(accent) ? '#0f172a' : '#ffffff'};">
+                  <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                  <span>${escapeHtml(appData.email)}</span>
+                </a>
+              ` : ''}
+              ${appData.linkedin ? `
+                <a href="${escapeHtml(appData.linkedin)}" target="_blank" rel="noopener noreferrer" class="px-4 py-3 rounded-2xl text-xs sm:text-sm font-semibold border inline-flex items-center gap-2 transition hover:opacity-80" style="border-color: ${cardBorder}; background: ${cardBg}; color: ${textColor};">
+                  <span>LinkedIn</span>
+                </a>
+              ` : ''}
+              ${appData.instagram ? `
+                <a href="${escapeHtml(appData.instagram)}" target="_blank" rel="noopener noreferrer" class="px-4 py-3 rounded-2xl text-xs sm:text-sm font-semibold border inline-flex items-center gap-2 transition hover:opacity-80" style="border-color: ${cardBorder}; background: ${cardBg}; color: ${textColor};">
+                  <span>Instagram</span>
+                </a>
+              ` : ''}
+              ${appData.behance ? `
+                <a href="${escapeHtml(appData.behance)}" target="_blank" rel="noopener noreferrer" class="px-4 py-3 rounded-2xl text-xs sm:text-sm font-semibold border inline-flex items-center gap-2 transition hover:opacity-80" style="border-color: ${cardBorder}; background: ${cardBg}; color: ${textColor};">
+                  <span>Portfolio Showcase</span>
+                </a>
+              ` : ''}
+            </div>
+
+            <p class="text-[11px] mt-12 opacity-40 font-mono">
+              Designed with Portfolio Builder • &copy; ${new Date().getFullYear()} ${escapeHtml(appData.name || 'Student')}
+            </p>
+          </footer>
+        `
+      };
+
+      // Assemble HTML according to ordered visible sections
+      let completeHtml = '';
+      appData.sections.forEach(sec => {
+        if (sec.visible && sectionHtmlMap[sec.id]) {
+          completeHtml += sectionHtmlMap[sec.id];
+        }
+      });
+
+      // Apply root wrapper styles
+      root.style.backgroundColor = bg;
+      root.style.fontFamily = `"${font}", sans-serif`;
+      root.style.fontSize = baseSize + 'px';
+      root.innerHTML = completeHtml;
+    }
+
+    /* -------------------------------------------------------------
+       STANDALONE WEBSITE EXPORT GENERATOR (index.html)
+       ------------------------------------------------------------- */
+    function downloadWebsite() {
+      showToast("Generating ready-to-deploy HTML package...", "download");
+
+      const isDark = appData.themeMode === 'dark';
+      const bg = appData.bgColor || (isDark ? '#0b0f17' : '#ffffff');
+      const textColor = isDark ? '#f8fafc' : '#0f172a';
+      const mutedColor = isDark ? '#94a3b8' : '#64748b';
+      const cardBg = isDark ? 'rgba(30, 41, 59, 0.5)' : 'rgba(255, 255, 255, 0.95)';
+      const cardBorder = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
+      const accent = appData.accentColor || '#f59e0b';
+      const font = appData.font || 'Space Grotesk';
+      const baseSize = appData.fontSize || 16;
+      const studentName = appData.name || 'Student Portfolio';
+
+      // Capture rendered preview markup
+      const contentHtml = document.getElementById('livePortfolioRoot').innerHTML;
+
+      // Construct standalone HTML file
+      const standaloneHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(studentName)} — Creative Portfolio</title>
+  <meta name="description" content="${escapeHtml(appData.bio || 'Portfolio of ' + studentName)}">
+  
+  <!-- Standalone Tailwind CDN for complete zero-dependency styling -->
+  <script src="https://cdn.tailwindcss.com"><\/script>
+  
+  <!-- Google Fonts Embed -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300..800;1,300..800&family=Inter:wght@300..800&family=Outfit:wght@300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Space+Grotesk:wght@300..700&family=Syne:wght@400..800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      background-color: ${bg};
+      color: ${textColor};
+      font-family: "${font}", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: ${baseSize}px;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection {
+      background-color: ${accent};
+      color: ${isLightColor(accent) ? '#0f172a' : '#ffffff'};
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  ${contentHtml}
+</body>
+</html>`;
+
+      // Trigger automatic file download
+      const blob = new Blob([standaloneHtml], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `index.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setTimeout(() => {
+        showToast("Website downloaded! Ready for Netlify Drop", "check");
+      }, 500);
+    }
+
+    /* -------------------------------------------------------------
+       UI CONTROLS & HELPERS
+       ------------------------------------------------------------- */
+    function setViewport(device) {
+      const wrapper = document.getElementById('previewWrapper');
+      const bDesktop = document.getElementById('vpDesktop');
+      const bTablet = document.getElementById('vpTablet');
+      const bMobile = document.getElementById('vpMobile');
+
+      // Reset active button styling
+      [bDesktop, bTablet, bMobile].forEach(btn => {
+        btn.className = "px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-slate-400 hover:text-white transition";
+      });
+
+      if (device === 'desktop') {
+        wrapper.style.maxWidth = '100%';
+        bDesktop.className = "px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-white bg-slate-800 font-medium transition shadow-sm";
+      } else if (device === 'tablet') {
+        wrapper.style.maxWidth = '768px';
+        bTablet.className = "px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-white bg-slate-800 font-medium transition shadow-sm";
+      } else if (device === 'mobile') {
+        wrapper.style.maxWidth = '390px';
+        bMobile.className = "px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-white bg-slate-800 font-medium transition shadow-sm";
+      }
+    }
+
+    function setEditorTab(tab) {
+      const cSec = document.getElementById('contentTabSection');
+      const dSec = document.getElementById('designTabSection');
+      const sSec = document.getElementById('sectionsTabSection');
+
+      const bC = document.getElementById('tabBtnContent');
+      const bD = document.getElementById('tabBtnDesign');
+      const bS = document.getElementById('tabBtnSections');
+
+      [cSec, dSec, sSec].forEach(el => el.classList.add('hidden'));
+      [bC, bD, bS].forEach(btn => {
+        btn.className = "flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 bg-slate-900 text-slate-400 hover:text-white transition";
+      });
+
+      if (tab === 'content') {
+        cSec.classList.remove('hidden');
+        bC.className = "flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-sm transition";
+      } else if (tab === 'design') {
+        dSec.classList.remove('hidden');
+        bD.className = "flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-sm transition";
+      } else if (tab === 'sections') {
+        sSec.classList.remove('hidden');
+        bS.className = "flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-sm transition";
+      }
+    }
+
+    function switchMobileTab(tab) {
+      const editorPanel = document.getElementById('editorPanel');
+      const previewPanel = document.getElementById('previewPanel');
+      const tEd = document.getElementById('mobileTabEditor');
+      const tPr = document.getElementById('mobileTabPreview');
+
+      if (tab === 'editor') {
+        editorPanel.classList.remove('hidden');
+        previewPanel.classList.add('hidden');
+        tEd.className = "flex-1 py-2.5 text-center text-indigo-400 border-b-2 border-indigo-500 flex items-center justify-center gap-1.5";
+        tPr.className = "flex-1 py-2.5 text-center text-slate-400 flex items-center justify-center gap-1.5";
+      } else {
+        editorPanel.classList.add('hidden');
+        previewPanel.classList.remove('hidden');
+        tPr.className = "flex-1 py-2.5 text-center text-indigo-400 border-b-2 border-indigo-500 flex items-center justify-center gap-1.5";
+        tEd.className = "flex-1 py-2.5 text-center text-slate-400 flex items-center justify-center gap-1.5";
+      }
+    }
+
+    function confirmReset() {
+      // In-page non-blocking custom modal simulation
+      if (window.confirm("Reset all fields back to default sample portfolio? Any unsaved edits will be cleared.")) {
+        localStorage.removeItem(STORAGE_KEY);
+        appData = JSON.parse(JSON.stringify(defaultData));
+        populateFormFields();
+        renderProjectsEditor();
+        renderSectionsList();
+        renderPreview();
+        showToast("Reset to sample student data", "rotate-ccw");
+      }
+    }
+
+    function escapeHtml(string) {
+      if (!string) return '';
+      return String(string)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Determine if color is light to set high contrast text
+    function isLightColor(hex) {
+      if (!hex || hex.indexOf('#') !== 0) return false;
+      const c = hex.substring(1);
+      const rgb = parseInt(c, 16);
+      const r = (rgb >> 16) & 0xff;
+      const g = (rgb >>  8) & 0xff;
+      const b = (rgb >>  0) & 0xff;
+      const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      return luma > 165;
+    }
+  </script>
+</body>
+</html>
